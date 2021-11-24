@@ -1,0 +1,9 @@
+*.gz
+authorized_keys
+id_ed25519*
+id_rsa*
+/root/laravel/*/storage/framework/views
+/root/laravel/*/storage/logs
+/root/root/.bash_history
+/root/var/lib/mysql
+!.gitkeep

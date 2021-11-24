@@ -1,0 +1,81 @@
+version: '3'
+services:
+  web:
+    build:
+      context: ./Dockerfiles/amazonlinux
+    command: /bin/sh -c 'php-fpm --daemonize && exec nginx -g "daemon off;"'
+    depends_on:
+      - db
+      - redis
+    hostname: web
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./root/etc/nginx/conf.d:/etc/nginx/conf.d
+      - ./root/etc/nginx/default.d:/etc/nginx/default.d
+      - ./root/etc/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./root/etc/php-fpm.conf:/etc/php-fpm.conf
+      - ./root/etc/php-fpm.d/www.conf:/etc/php-fpm.d/www.conf
+      - ./root/etc/php.d/user.ini:/etc/php.d/user.ini
+      - ./root/laravel/web/.env:/laravel/.env
+      - ./root/laravel/web/storage:/laravel/storage
+      - ./root/root/.bash_history:/root/.bash_history
+      - ./root/root/.bashrc:/root/.bashrc
+      - ./root/root/.vimrc:/root/.vimrc
+  api:
+    build:
+      context: ./Dockerfiles/amazonlinux
+    command: /bin/sh -c 'php-fpm --daemonize && exec nginx -g "daemon off;"'
+    depends_on:
+      - db
+      - redis
+    hostname: api
+    ports:
+      - 8000:80
+      - 8443:443
+    volumes:
+      - ./root/etc/nginx/conf.d:/etc/nginx/conf.d
+      - ./root/etc/nginx/default.d:/etc/nginx/default.d
+      - ./root/etc/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./root/etc/php-fpm.conf:/etc/php-fpm.conf
+      - ./root/etc/php-fpm.d/www.conf:/etc/php-fpm.d/www.conf
+      - ./root/etc/php.d/user.ini:/etc/php.d/user.ini
+      - ./root/laravel/api/.env:/laravel/.env
+      - ./root/laravel/api/storage:/laravel/storage
+      - ./root/root/.bash_history:/root/.bash_history
+      - ./root/root/.bashrc:/root/.bashrc
+      - ./root/root/.vimrc:/root/.vimrc
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: &mysql_database ${MYSQL_DATABASE:-laravel}
+      MYSQL_ROOT_PASSWORD: &mysql_password ${MYSQL_ROOT_PASSWORD:-password}
+      MYSQL_USER: *mysql_database
+      MYSQL_PASSWORD: *mysql_password
+    ports:
+      - 3306:3306
+    volumes:
+      - ./root/etc/mysql/conf.d/user.cnf:/etc/mysql/conf.d/user.cnf
+      - ./root/var/lib/mysql:/var/lib/mysql
+  redis:
+    image: redis:6
+    ports:
+      - 6379:6379
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - db
+    ports:
+      - 8080:80
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: *mysql_password
+      UPLOAD_LIMIT: 1G
